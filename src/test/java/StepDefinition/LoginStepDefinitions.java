@@ -15,8 +15,8 @@ public class LoginStepDefinitions {
 
 	@Given("User is on login page")
 	public void when_user_on_loggingPage() {
-		WebDriver driver = new ChromeDriver();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+		driver = new ChromeDriver();
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
 		driver.get("https://www.saucedemo.com/");
 
 	}
@@ -39,7 +39,7 @@ public class LoginStepDefinitions {
 	}
 
 	@And("Close the browser")
-	public void when_user_close_browser() {
+	public void when_user_close_browser() throws InterruptedException {
 		driver.close();
 
 	}
