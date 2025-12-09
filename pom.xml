@@ -6,6 +6,13 @@
 	<artifactId>BDDFramework</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<properties>
+
+		<maven.compiler.source>23</maven.compiler.source>
+		<maven.compiler.target>23</maven.compiler.target>
+	</properties>
+
+
 	<dependencies>
 
 		<!--
@@ -21,6 +28,7 @@
 			<groupId>io.cucumber</groupId>
 			<artifactId>cucumber-java</artifactId>
 			<version>7.20.1</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-testng -->
@@ -28,6 +36,7 @@
 			<groupId>io.cucumber</groupId>
 			<artifactId>cucumber-testng</artifactId>
 			<version>7.20.1</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-core -->
@@ -37,12 +46,14 @@
 			<version>7.20.1</version>
 		</dependency>
 
+
 		<!-- https://mvnrepository.com/artifact/org.testng/testng -->
 		<dependency>
 			<groupId>org.testng</groupId>
 			<artifactId>testng</artifactId>
 			<version>7.10.2</version>
 			<scope>test</scope>
+
 		</dependency>
 
 		<!--
@@ -53,7 +64,17 @@
 			<version>5.8.4</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/io.cucumber/gherkin -->
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>gherkin</artifactId>
+			<version>30.0.4</version>
+			<scope>test</scope>
+		</dependency>
+
+
 
 	</dependencies>
+
 
 </project>
