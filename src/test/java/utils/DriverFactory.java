@@ -16,6 +16,9 @@ import java.time.Duration;
 
 /**
  * Thread-safe WebDriver factory suitable for parallel tests (ThreadLocal).
+ * - Uses WebDriverManager to provision drivers
+ * - Respects ConfigReader (browser, headless, implicit wait)
+ * - Defensive: cleans partial drivers on error and never sets null into ThreadLocal
  */
 public final class DriverFactory {
     private static final Logger LOG = LoggerFactory.getLogger(DriverFactory.class);
@@ -44,11 +47,16 @@ public final class DriverFactory {
         TL_DRIVER.set(driver);
     }
 
+    /**
+     * Initialize WebDriver for a given browser.
+     * Resolution order: browserRaw (param) -> System property "browser" -> config.properties
+     *
+     * @param browserRaw optional browser name (e.g., "chrome", "firefox", "edge")
+     */
     public static void initDriver(String browserRaw) {
         // resolve browser: param -> system prop -> config
         String browser = (browserRaw == null || browserRaw.isBlank()) ? ConfigReader.getBrowser()
                 : browserRaw.trim().toLowerCase();
-
         LOG.info("DriverFactory.initDriver -> resolved browser: {}", browser);
 
         WebDriver driver = null;
@@ -59,10 +67,11 @@ public final class DriverFactory {
                     WebDriverManager.firefoxdriver().setup();
                     FirefoxOptions ffOptions = new FirefoxOptions();
                     ffOptions.setPageLoadStrategy(PageLoadStrategy.NORMAL);
+
                     if (ConfigReader.isHeadless()) {
-                        // use setHeadless for Firefox so it's reliable across geckodriver versions
-                    	ffOptions.addArguments("-headless");
-                        LOG.debug("Firefox configured for headless mode via setHeadless(true)");
+                        // use headless arg (setHeadless may be unavailable depending on Selenium version)
+                        ffOptions.addArguments("-headless");
+                        LOG.debug("Firefox configured for headless via -headless");
                     }
                     driver = new FirefoxDriver(ffOptions);
                     break;
@@ -72,15 +81,16 @@ public final class DriverFactory {
                     EdgeOptions edgeOptions = new EdgeOptions();
                     edgeOptions.setPageLoadStrategy(PageLoadStrategy.NORMAL);
                     if (ConfigReader.isHeadless()) {
+                        // Edge is chromium-based; use headless arg
                         edgeOptions.addArguments("--headless=new");
-                        LOG.debug("Edge configured for headless mode via --headless=new");
+                        LOG.debug("Edge configured for headless via --headless=new");
                     }
                     driver = new EdgeDriver(edgeOptions);
                     break;
 
                 case "chrome":
                 default:
-                    // Optional: pin version via system property "chromedriver.version"
+                    // Optionally pin chromedriver version via system property "chromedriver.version"
                     String pinned = System.getProperty("chromedriver.version");
                     if (pinned != null && !pinned.isBlank()) {
                         WebDriverManager.chromedriver().driverVersion(pinned).setup();
@@ -91,10 +101,11 @@ public final class DriverFactory {
 
                     ChromeOptions chromeOptions = new ChromeOptions();
                     chromeOptions.setPageLoadStrategy(PageLoadStrategy.NORMAL);
-                    chromeOptions.addArguments("--remote-allow-origins=*");
+                    chromeOptions.addArguments("--remote-allow-origins=*"); // compatibility
                     if (ConfigReader.isHeadless()) {
+                        // modern Chrome prefers --headless=new
                         chromeOptions.addArguments("--headless=new");
-                        LOG.debug("Chrome configured for headless mode via --headless=new");
+                        LOG.debug("Chrome configured for headless via --headless=new");
                     }
                     chromeOptions.addArguments("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage");
                     driver = new ChromeDriver(chromeOptions);
@@ -106,14 +117,13 @@ public final class DriverFactory {
                 throw new IllegalStateException("WebDriver instance was not created for browser: " + browser);
             }
 
-            // timeouts & window — check again to avoid NPE
+            // timeouts & window — guarded so we can cleanup gracefully if fail
             try {
                 driver.manage().window().maximize();
                 driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(ConfigReader.getImplicitWait()));
                 driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
             } catch (Exception e) {
-                // If manage() fails, cleanup and rethrow
-                LOG.error("Failed to configure WebDriver timeouts/window.", e);
+                LOG.error("Failed to configure WebDriver timeouts/window. Will cleanup driver.", e);
                 try { driver.quit(); } catch (Exception ignored) {}
                 throw e;
             }
@@ -144,7 +154,7 @@ public final class DriverFactory {
     }
 
     static {
-        // optional: best-effort cleanup on JVM exit
+        // best-effort cleanup on JVM exit (helps local runs)
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             WebDriver d = TL_DRIVER.get();
             if (d != null) {
