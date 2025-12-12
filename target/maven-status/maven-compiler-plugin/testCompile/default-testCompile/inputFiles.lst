@@ -1,3 +1,6 @@
-C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\base\BaseTest.java
+C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\pages\LoginPage.java
 C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\StepDefinitions\LoginStepDefinitions.java
 C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\TestRunner\CucumberTestRunner.java
+C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\utils\ConfigReader.java
+C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\utils\DriverFactory.java
+C:\Users\91782\eclipse-workspace\BDDFramework\src\test\java\utils\TestHooks.java
