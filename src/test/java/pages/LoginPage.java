@@ -2,6 +2,7 @@ package pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import utils.WaitUtils;
 
 public class LoginPage {
     private final WebDriver driver;
@@ -20,6 +21,10 @@ public class LoginPage {
             throw new IllegalArgumentException("Base URL is null or blank. Check config.");
         }
         driver.get(url);
+
+        // centralized waits
+        WaitUtils.waitForDocumentComplete(driver, 10);
+        WaitUtils.waitForVisibilityByLocator(driver, username, 10);
     }
 
     public void enterUsername(String user) {

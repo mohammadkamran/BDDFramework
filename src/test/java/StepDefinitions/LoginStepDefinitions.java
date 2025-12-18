@@ -1,5 +1,6 @@
 package StepDefinitions;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -34,12 +35,8 @@ public class LoginStepDefinitions {
 
     @Given("User is on login page")
     public void user_is_on_login_page() {
-        String browser = ConfigReader.getBrowser();
-        DriverFactory.initDriver(browser);
-        driver = DriverFactory.getDriver();
-        if (driver == null) {
-            throw new IllegalStateException("Driver not initialized for browser: " + browser);
-        }
+        // Driver is initialized by TestHooks beforeScenario
+        driver = DriverFactory.getDriverOrThrow();
         loginPage = new LoginPage(driver);
 
         String baseUrl = ConfigReader.getBaseUrl();
@@ -47,6 +44,15 @@ public class LoginStepDefinitions {
             throw new IllegalStateException("Base URL is null. Place config.properties in src/test/resources or pass -Dbase.url");
         }
         loginPage.open(baseUrl);
+
+        // Wait for username field to be visible to avoid a blank/partial render race
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        try {
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("user-name")));
+        } catch (Exception e) {
+            // Allow test to continue so failure assertion gives context
+            System.err.println("Warning: username field not visible after opening login page: " + e.getMessage());
+        }
     }
 
     @When("User enters a {string} and {string}")

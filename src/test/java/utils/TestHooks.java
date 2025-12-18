@@ -8,6 +8,7 @@ public class TestHooks {
 
     @Before
     public void beforeScenario() {
+        // Initialize driver here so step definitions don't need to call initDriver themselves.
         String browser = ConfigReader.getBrowser();
         DriverFactory.initDriver(browser);
     }
